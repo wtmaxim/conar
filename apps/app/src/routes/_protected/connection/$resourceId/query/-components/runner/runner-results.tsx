@@ -4,14 +4,12 @@ import { Spinner } from '@conar/ui/components/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@conar/ui/components/tabs'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@conar/ui/components/tooltip'
 import { cn } from '@conar/ui/lib/utils'
-import { RiChatAiLine, RiStopLine, RiVipCrownLine } from '@remixicon/react'
+import { RiChatAiLine, RiStopLine } from '@remixicon/react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { Monaco } from '~/components/monaco'
 import { toggleChat } from '~/entities/connection/store'
-import { useSubscription } from '~/entities/user/hooks/use-subscription'
 import { queryClient } from '~/main'
-import { setIsSubscriptionDialogOpen } from '~/store'
 import { formatSql } from '~/utils/formatter'
 import { runnerQueryOptions } from '.'
 import { Route } from '../..'
@@ -19,7 +17,6 @@ import { RunnerResultsTable } from './runner-results-table'
 
 export function RunnerResults() {
   const { chatId } = Route.useSearch()
-  const { subscription } = useSubscription()
   const { connection, connectionResource } = Route.useRouteContext()
   const { data: results, fetchStatus: queryStatus } = useQuery(runnerQueryOptions(connectionResource))
 
@@ -109,40 +106,27 @@ export function RunnerResults() {
                     >
                       {error}
                     </div>
-                    {subscription
-                      ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => toggleChat(connection.id, true)}
-                            render={(
-                              <Link
-                                to="/connection/$resourceId/query"
-                                params={{ resourceId: connectionResource.id }}
-                                search={{
-                                  chatId,
-                                  error: [
-                                    `Fix the following SQL error by correcting the SQL query on the lines ${startLineNumber} - ${endLineNumber}:`,
-                                    error,
-                                  ].join('\n'),
-                                }}
-                              />
-                            )}
-                          >
-                            <RiChatAiLine />
-                            Fix in chat
-                          </Button>
-                        )
-                      : (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setIsSubscriptionDialogOpen(true)}
-                          >
-                            Fix in chat
-                            <RiVipCrownLine className="size-4" />
-                          </Button>
-                        )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => toggleChat(connection.id, true)}
+                      render={(
+                        <Link
+                          to="/connection/$resourceId/query"
+                          params={{ resourceId: connectionResource.id }}
+                          search={{
+                            chatId,
+                            error: [
+                              `Fix the following SQL error by correcting the SQL query on the lines ${startLineNumber} - ${endLineNumber}:`,
+                              error,
+                            ].join('\n'),
+                          }}
+                        />
+                      )}
+                    >
+                      <RiChatAiLine />
+                      Fix in chat
+                    </Button>
                   </div>
                 )
               : !data || !data[0] || data.length === 0

@@ -17,9 +17,8 @@ import { createWebStorageValue } from 'seitu/web'
 import { toast } from 'sonner'
 import { TipTap } from '~/components/tiptap'
 import { getFilesStore } from '~/entities/connection/store'
-import { useSubscription as useUserSubscription } from '~/entities/user/hooks'
 import { orpc } from '~/lib/orpc'
-import { appStore, setIsSubscriptionDialogOpen } from '~/store'
+import { appStore } from '~/store'
 import { Route } from '../..'
 import { chatHooks } from '../../-page'
 import { ChatImages } from './chat-images'
@@ -65,7 +64,6 @@ export function ChatForm() {
     defaultValue: '',
   })
   const input = useSubscription(inputValue)
-  const { subscription } = useUserSubscription()
 
   useEffect(() => {
     if (ref.current) {
@@ -184,24 +182,6 @@ export function ChatForm() {
         dark:bg-input/30
       `}
       >
-        {!subscription && (
-          <div
-            className="
-              z-10 flex items-center gap-2 border-b px-3 py-1.5 text-xs
-            "
-          >
-            <span className="flex-1 text-muted-foreground">
-              Upgrade to Pro to generate SQL queries with AI.
-            </span>
-            <Button
-              variant="outline"
-              size="xs"
-              onClick={() => setIsSubscriptionDialogOpen(true)}
-            >
-              Upgrade
-            </Button>
-          </div>
-        )}
         <TipTap
           ref={ref}
           data-mask
@@ -213,7 +193,7 @@ export function ChatForm() {
           className={`
             max-h-62.5 min-h-12.5 overflow-y-auto p-2 text-sm outline-none
           `}
-          disabled={!subscription || !isOnline}
+          disabled={!isOnline}
           onEnter={handleSend}
           onImageAdd={(file) => {
             filesStore.set([...files, file])
@@ -250,7 +230,7 @@ export function ChatForm() {
                   size="icon-xs"
                   variant="outline"
                   className={input.length < 10 ? 'cursor-default opacity-50' : ''}
-                  disabled={status === 'submitted' || status === 'streaming' || isEnhancingPrompt || !subscription}
+                  disabled={status === 'submitted' || status === 'streaming' || isEnhancingPrompt}
                   onClick={() => enhancePrompt({
                     prompt: input,
                     chatId: chat.id,

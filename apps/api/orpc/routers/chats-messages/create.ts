@@ -2,11 +2,11 @@ import { db } from '@conar/db'
 import { chats, chatsMessages, chatsMessagesInsertSchema } from '@conar/db/schema'
 import { ORPCError } from '@orpc/server'
 import { and, eq } from 'drizzle-orm'
-import { orpc, subscriptionMiddleware } from '~/orpc'
+import { authMiddleware, orpc } from '~/orpc'
 import { publisher } from './events'
 
 export const create = orpc
-  .use(subscriptionMiddleware)
+  .use(authMiddleware)
   .input(chatsMessagesInsertSchema)
   .handler(async ({ context, input }) => {
     const [chat] = await db.select({ userId: chats.userId })

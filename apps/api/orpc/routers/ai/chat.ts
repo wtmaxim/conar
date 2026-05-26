@@ -10,7 +10,7 @@ import { createRetryable } from 'ai-retry'
 import { type } from 'arktype'
 import { v7 } from 'uuid'
 import { withPosthog } from '~/lib/posthog'
-import { orpc, subscriptionMiddleware } from '~/orpc'
+import { authMiddleware, orpc } from '~/orpc'
 
 const model = createRetryable({
   model: anthropic('claude-opus-4-6'),
@@ -31,7 +31,7 @@ function handleError(error: unknown) {
 }
 
 export const chat = orpc
-  .use(subscriptionMiddleware)
+  .use(authMiddleware)
   .use(async ({ context, next }) => {
     context.setHeader('Transfer-Encoding', 'chunked')
     context.setHeader('Connection', 'keep-alive')

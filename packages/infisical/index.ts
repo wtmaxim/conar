@@ -30,8 +30,55 @@ export function pathToString(path: string[]) {
   return path.length === 0 ? '/' : `/${path.join('/')}`
 }
 
+function getStatusCode(error: unknown): number | undefined {
+  if (!error || typeof error !== 'object') {
+    return undefined
+  }
+
+  const directStatusCode = Reflect.get(error, 'statusCode')
+  if (typeof directStatusCode === 'number') {
+    return directStatusCode
+  }
+
+  const response = Reflect.get(error, 'response')
+  if (response && typeof response === 'object') {
+    const responseStatus = Reflect.get(response, 'status')
+    if (typeof responseStatus === 'number') {
+      return responseStatus
+    }
+
+    const responseStatusCode = Reflect.get(response, 'statusCode')
+    if (typeof responseStatusCode === 'number') {
+      return responseStatusCode
+    }
+  }
+
+  const cause = Reflect.get(error, 'cause')
+  if (cause && typeof cause === 'object') {
+    const causeStatusCode = Reflect.get(cause, 'statusCode')
+    if (typeof causeStatusCode === 'number') {
+      return causeStatusCode
+    }
+  }
+
+  return undefined
+}
+
 export function isFolderMissingError(error: unknown): boolean {
-  return error instanceof Error && error.message.includes('StatusCode=404')
+  const statusCode = getStatusCode(error)
+  if (statusCode === 404) {
+    return true
+  }
+
+  if (!(error instanceof Error)) {
+    return false
+  }
+
+  const message = error.message.toLowerCase()
+  return message.includes('statuscode=404')
+    || message.includes('status code: 404')
+    || message.includes('status code 404')
+    || message.includes('404 not found')
 }
 
 export async function ensureFolders(folders: string[]) {

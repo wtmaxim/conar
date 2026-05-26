@@ -3,10 +3,10 @@ import { ConnectionType } from '@conar/shared/enums/connection-type'
 import { generateText } from 'ai'
 import { type } from 'arktype'
 import { withPosthog } from '~/lib/posthog'
-import { orpc, subscriptionMiddleware } from '~/orpc'
+import { authMiddleware, orpc } from '~/orpc'
 
 export const fixSQL = orpc
-  .use(subscriptionMiddleware)
+  .use(authMiddleware)
   .input(type({
     sql: 'string',
     error: 'string',

@@ -3,11 +3,11 @@ import { chats, chatsMessages, chatsMessagesUpdateSchema } from '@conar/db/schem
 import { ORPCError } from '@orpc/server'
 import { type } from 'arktype'
 import { and, eq } from 'drizzle-orm'
-import { orpc, subscriptionMiddleware } from '~/orpc'
+import { authMiddleware, orpc } from '~/orpc'
 import { publisher } from './events'
 
 export const update = orpc
-  .use(subscriptionMiddleware)
+  .use(authMiddleware)
   .input(type.and(
     chatsMessagesUpdateSchema.omit('id'),
     chatsMessagesUpdateSchema.pick('id').required(),

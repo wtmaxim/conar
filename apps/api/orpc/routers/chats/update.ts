@@ -2,11 +2,11 @@ import { db } from '@conar/db'
 import { chats, chatsUpdateSchema } from '@conar/db/schema'
 import { type } from 'arktype'
 import { and, eq } from 'drizzle-orm/sql'
-import { orpc, subscriptionMiddleware } from '~/orpc'
+import { authMiddleware, orpc } from '~/orpc'
 import { publisher } from './events'
 
 export const update = orpc
-  .use(subscriptionMiddleware)
+  .use(authMiddleware)
   .input(type.and(
     chatsUpdateSchema.omit('createdAt', 'updatedAt', 'id', 'userId', 'activeStreamId', 'connectionId'),
     chatsUpdateSchema.pick('id').required(),

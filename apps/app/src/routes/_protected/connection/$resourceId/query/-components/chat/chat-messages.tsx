@@ -21,7 +21,6 @@ import { useSubscription } from 'seitu/react'
 import { useStickToBottom } from 'use-stick-to-bottom'
 import { Markdown } from '~/components/markdown'
 import { getEditorQueriesComputed } from '~/entities/connection/store'
-import { useSubscription as useUserSubscription } from '~/entities/user/hooks'
 import { Route } from '../..'
 import { chatHooks, runnerHooks } from '../../-page'
 import { ChatImages } from './chat-images'
@@ -328,7 +327,6 @@ function AssistantMessage({ message, isLast, status, className, ...props }: { me
   const { chat } = Route.useLoaderData()
   const ref = useRef<HTMLDivElement>(null)
   const { height } = useElementSize(ref)
-  const { subscription } = useUserSubscription()
 
   const isLoading = isLast ? status === 'streaming' || status === 'submitted' : false
 
@@ -367,7 +365,7 @@ function AssistantMessage({ message, isLast, status, className, ...props }: { me
             <ChatMessageFooterButton
               icon={<RiRestartLine className="size-4 text-muted-foreground" />}
               tooltip="Regenerate message"
-              disabled={status === 'streaming' || status === 'submitted' || !subscription}
+              disabled={status === 'streaming' || status === 'submitted'}
               onClick={() => chat.regenerate({ messageId: message.id })}
             />
           )}

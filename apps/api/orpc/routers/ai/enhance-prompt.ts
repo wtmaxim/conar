@@ -5,7 +5,7 @@ import { generateText } from 'ai'
 import { type } from 'arktype'
 import { asc, eq } from 'drizzle-orm'
 import { withPosthog } from '~/lib/posthog'
-import { orpc, subscriptionMiddleware } from '~/orpc'
+import { authMiddleware, orpc } from '~/orpc'
 
 async function getMessages(chatId: string) {
   return db
@@ -16,7 +16,7 @@ async function getMessages(chatId: string) {
 }
 
 export const enhancePrompt = orpc
-  .use(subscriptionMiddleware)
+  .use(authMiddleware)
   .input(type({
     prompt: 'string',
     chatId: 'string.uuid.v7',

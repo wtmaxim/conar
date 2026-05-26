@@ -115,7 +115,15 @@ export const auth = betterAuth({
             name: INFISICAL_USER_ENCRYPTION_SECRET_NAME,
             value: nanoid(),
           }).catch(async (error) => {
-            console.error(`Failed to set user secret in Infisical: ${error instanceof Error ? error.message : error}`, error instanceof Error && error.cause ? error.cause : undefined)
+            console.error(
+              `Failed to set user secret in Infisical: ${error instanceof Error ? error.message : error}`,
+              {
+                userId: user.id,
+                secretPath: `/users/${user.id}`,
+                secretName: INFISICAL_USER_ENCRYPTION_SECRET_NAME,
+                cause: error instanceof Error && error.cause ? error.cause : undefined,
+              },
+            )
             await db.delete(users).where(eq(users.id, user.id))
             throw error
           })

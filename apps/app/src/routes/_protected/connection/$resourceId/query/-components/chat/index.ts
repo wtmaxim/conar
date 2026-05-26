@@ -18,6 +18,7 @@ import { orpc } from '~/lib/orpc'
 import { queryClient } from '~/main'
 
 export * from './chat'
+const useRorkToolkitChat = import.meta.env.VITE_USE_RORK_TOOLKIT_CHAT === 'true'
 
 async function ensureChat({ chatId, connectionResourceId }: { chatId: string, connectionResourceId: string }) {
   const existingChat = chatsCollection.get(chatId)
@@ -88,23 +89,68 @@ export const createChat = memoize(async ({ id, connectionResource }: { id: strin
         }
 
         const store = getConnectionResourceStore(connectionResource.id)
+        const tablesAndSchemas = await queryClient.ensureQueryData(resourceTablesAndSchemasQueryOptions({
+          connectionResource,
+          showSystem: store.get().showSystem,
+        }))
+        const baseContext = [
+          `Current query in the SQL runner:
+            \`\`\`sql
+            ${store.get().query.trim() || '-- empty'}
+            \`\`\`
+            `,
+          'Database schemas and tables:',
+          JSON.stringify(tablesAndSchemas, null, 2),
+        ]
 
-        return eventIteratorToStream(await orpc.ai.chat.call({
+        let context = baseContext.join('\n')
+
+        if (useRorkToolkitChat) {
+          const columnsByTable = await Promise.all(
+            tablesAndSchemas.schemas.flatMap(schema =>
+              schema.tables.map(async (tableEntry) => {
+                const columns = await queryClient.ensureQueryData(
+                  resourceTableColumnsQueryOptions({
+                    connectionResource,
+                    schema: schema.name,
+                    table: tableEntry.name,
+                  }),
+                ).catch(() => [])
+
+                return {
+                  schema: schema.name,
+                  table: tableEntry.name,
+                  columns: columns.map(col => ({
+                    name: col.id,
+                    type: col.type,
+                    isNullable: col.isNullable,
+                  })),
+                }
+              }),
+            ),
+          )
+
+          context = [
+            ...baseContext,
+            'Database columns by table:',
+            JSON.stringify(columnsByTable, null, 2),
+          ].join('\n')
+        }
+
+        const payload = {
           id: options.chatId,
           createdAt: chat.createdAt,
           updatedAt: chat.updatedAt,
           type: connection.type,
           messages: options.messages,
-          context: [
-            `Current query in the SQL runner:
-            \`\`\`sql
-            ${store.get().query.trim() || '-- empty'}
-            \`\`\`
-            `,
-            'Database schemas and tables:',
-            JSON.stringify(await queryClient.ensureQueryData(resourceTablesAndSchemasQueryOptions({ connectionResource, showSystem: store.get().showSystem })), null, 2),
-          ].join('\n'),
-        }, { signal: options.abortSignal }))
+          context,
+        } as const
+
+        const streamIterator = useRorkToolkitChat
+          ? await orpc.ai.chatRork.call(payload, { signal: options.abortSignal })
+          : await orpc.ai.chat.call(payload, { signal: options.abortSignal })
+
+        return eventIteratorToStream(streamIterator)
       },
       reconnectToStream() {
         throw new Error('Unsupported')

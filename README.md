@@ -59,10 +59,19 @@ Conar is an AI-powered open-source project that simplifies database interactions
 
 - **🐳 Start Database with Docker Compose**
 
-  This will start the PostgreSQL database & Redis in the background.
+  This will start PostgreSQL, Redis and Infisical in the background.
   ```bash
   pnpm run docker:start
   ```
+
+- **🔑 Configure API env**
+
+  Copy `apps/api/.env.example` to `apps/api/.env` and set at least:
+  - `INFISICAL_SITE_URL` (default local: `http://localhost:8082`)
+  - `INFISICAL_CLIENT_ID`
+  - `INFISICAL_CLIENT_SECRET`
+  - `INFISICAL_PROJECT_ID`
+  - `INFISICAL_ENVIRONMENT`
 
 - **🗄️ Prepare Database**
 

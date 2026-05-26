@@ -2,7 +2,7 @@ import { db } from '@conar/db'
 import { chats, chatsMessages } from '@conar/db/schema'
 import { type } from 'arktype'
 import { and, eq, inArray, or } from 'drizzle-orm'
-import { orpc, subscriptionMiddleware } from '~/orpc'
+import { authMiddleware, orpc } from '~/orpc'
 import { publisher } from './events'
 
 const input = type({
@@ -11,7 +11,7 @@ const input = type({
 })
 
 export const remove = orpc
-  .use(subscriptionMiddleware)
+  .use(authMiddleware)
   .input(type.or(input, input.array()).pipe(data => Array.isArray(data) ? data : [data]))
   .handler(async ({ context, input }) => {
     if (input.length === 0) {

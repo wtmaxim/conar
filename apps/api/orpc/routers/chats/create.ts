@@ -1,10 +1,10 @@
 import { db } from '@conar/db'
 import { chats, chatsInsertSchema } from '@conar/db/schema'
-import { orpc, subscriptionMiddleware } from '~/orpc'
+import { authMiddleware, orpc } from '~/orpc'
 import { publisher } from './events'
 
 export const create = orpc
-  .use(subscriptionMiddleware)
+  .use(authMiddleware)
   .input(chatsInsertSchema.omit('userId', 'activeStreamId', 'title'))
   .handler(async ({ context, input }) => {
     const [chat] = await db.insert(chats).values({
